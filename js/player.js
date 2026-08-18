@@ -115,16 +115,34 @@ export function bindControls(handlers) {
       case 'KeyM': case 'ShiftLeft': case 'ShiftRight': fire(handlers.mama)(e); break;
     }
   });
-  let tx = 0, ty = 0, tT = 0;
+  let tx = 0, ty = 0, tT = 0, tTriggered = false, tFromMamaBtn = false;
   addEventListener('touchstart', (e) => {
-    tx = e.touches[0].clientX; ty = e.touches[0].clientY; tT = Date.now();
+    const t = e.touches[0];
+    tx = t.clientX; ty = t.clientY; tT = Date.now();
+    tTriggered = false;
+    // 手指从「妈妈」按钮按下：交给按钮自己的处理，不参与滑动手势
+    tFromMamaBtn = !!(e.target && e.target.closest && e.target.closest('#btn-mama'));
   }, { passive: true });
+
+  // 滑动在手指移动中即时触发（阈值 26px），不等抬手 —— 下滑/上滑更跟手
+  addEventListener('touchmove', (e) => {
+    if (tTriggered || tFromMamaBtn) return;
+    const t = e.touches[0];
+    const dx = t.clientX - tx;
+    const dy = t.clientY - ty;
+    if (Math.abs(dx) < 26 && Math.abs(dy) < 26) return;
+    if (Math.abs(dx) > Math.abs(dy) * 1.25) {
+      tTriggered = true;
+      (dx > 0 ? handlers.right : handlers.left)();
+    } else if (Math.abs(dy) > Math.abs(dx) * 1.25) {
+      tTriggered = true;
+      (dy < 0 ? handlers.jump : handlers.slide)();
+    }
+  }, { passive: true });
+
   addEventListener('touchend', (e) => {
-    const dx = e.changedTouches[0].clientX - tx;
-    const dy = e.changedTouches[0].clientY - ty;
-    if (Date.now() - tT > 600) return;
-    if (Math.abs(dx) < 24 && Math.abs(dy) < 24) { handlers.jump(); return; }
-    if (Math.abs(dx) > Math.abs(dy)) (dx > 0 ? handlers.right : handlers.left)();
-    else (dy < 0 ? handlers.jump : handlers.slide)();
+    if (tTriggered || tFromMamaBtn) return;
+    // 未形成滑动的手势：快速轻点 = 跳跃
+    if (Date.now() - tT < 350) handlers.jump();
   }, { passive: true });
 }

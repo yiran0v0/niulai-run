@@ -56,6 +56,9 @@ window.__game = {
   get coins() { return game.state.coins; },
   get dist() { return game.state.dist; },
   get speed() { return game.state.speed; },
+  get sliding() { return player.state.sliding; },
+  get jumpY() { return player.state.jumpY; },
+  get lane() { return player.state.lane; },
   frames: 0, drawCalls: 0,
 };
 
