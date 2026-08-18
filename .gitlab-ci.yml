@@ -1,0 +1,12 @@
+# 极狐GitLab Pages 自动部署：推送到默认分支即发布
+pages:
+  stage: deploy
+  image: busybox:latest
+  script:
+    - mkdir -p public
+    - cp -r index.html js vendor README.md public/
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

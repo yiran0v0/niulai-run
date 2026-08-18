@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>牛来·梦境狂奔 —— 致敬《牛来》</title>
+<style>
+  :root {
+    --paper: #f4edda;
+    --ink: #33352e;
+    --ink-soft: #5c6156;
+    --seal: #b5453c;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--paper); }
+  body { font-family: "Kaiti SC", "STKaiti", "KaiTi", "Songti SC", serif; color: var(--ink); }
+  #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+
+  /* ---------- HUD ---------- */
+  #hud { position: fixed; top: 14px; left: 0; right: 0; display: none; justify-content: space-between;
+         padding: 0 22px; pointer-events: none; z-index: 5; }
+  .hud-card { background: rgba(244,237,218,.88); border: 2px solid var(--ink); border-radius: 10px;
+              padding: 6px 16px; font-size: 20px; letter-spacing: 2px; box-shadow: 3px 3px 0 rgba(51,53,46,.25); }
+  .hud-card b { color: var(--seal); font-weight: 700; }
+
+  /* ---------- 全屏界面 ---------- */
+  .screen { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+            flex-direction: column; z-index: 10; background: rgba(244,237,218,.55); }
+  .panel { background: var(--paper); border: 3px solid var(--ink); border-radius: 14px;
+           padding: 34px 46px; text-align: center; box-shadow: 6px 6px 0 rgba(51,53,46,.28);
+           max-width: min(92vw, 560px); }
+  .title { font-size: clamp(40px, 8vw, 72px); letter-spacing: 10px; margin-bottom: 6px; }
+  .title .ox { color: var(--seal); }
+  .subtitle { font-size: 18px; color: var(--ink-soft); letter-spacing: 4px; margin-bottom: 20px; }
+  .seal { display: inline-block; background: var(--seal); color: var(--paper); border-radius: 6px;
+          padding: 4px 8px 2px; font-size: 14px; letter-spacing: 2px; transform: rotate(-4deg);
+          margin-bottom: 18px; }
+  .hint { font-size: 16px; line-height: 1.9; color: var(--ink-soft); margin-bottom: 22px; }
+  .hint b { color: var(--ink); }
+  .btn { font-family: inherit; font-size: 24px; letter-spacing: 6px; padding: 12px 42px;
+         background: var(--ink); color: var(--paper); border: none; border-radius: 10px;
+         cursor: pointer; box-shadow: 4px 4px 0 rgba(181,69,60,.6); }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 rgba(181,69,60,.6); }
+  .stats { font-size: 22px; line-height: 2; margin-bottom: 18px; }
+  .stats b { color: var(--seal); font-size: 28px; }
+  #screen-over { display: none; }
+  .quote { margin-top: 16px; font-size: 14px; color: var(--ink-soft); letter-spacing: 2px; }
+
+  /* ---------- 自检输出（不可见，供 headless dump-dom） ---------- */
+  #selftest { position: fixed; left: 4px; bottom: 4px; z-index: 99; font: 12px monospace;
+              color: transparent; max-width: 1px; overflow: hidden; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud">
+  <div class="hud-card">牛来 <b id="hud-score">0</b></div>
+  <div class="hud-card">里程 <b id="hud-dist">0</b> 米</div>
+  <div class="hud-card">草料 <b id="hud-coins">0</b></div>
+</div>
+
+<div class="screen" id="screen-start">
+  <div class="panel">
+    <div class="seal">纯手工·不用 AI</div>
+    <div class="title"><span class="ox">牛来</span>·梦境狂奔</div>
+    <div class="subtitle">—— 致敬国产动画电影《牛来》 ——</div>
+    <div class="hint">
+      怯懦的小牛犊「牛来」坠入梦境<br/>
+      <b>← →</b> 换道　<b>↑ / 空格</b> 跳跃　<b>↓</b> 滑铲<br/>
+      躲开狼群与木桩，收集草料，跑出草原！
+    </div>
+    <button class="btn" id="btn-start">入 梦</button>
+    <div class="quote">「世间从无安稳，要学会警觉自立。」—— 灵蛇</div>
+  </div>
+</div>
+
+<div class="screen" id="screen-over">
+  <div class="panel">
+    <div class="seal">梦 醒</div>
+    <div class="title" style="font-size:44px">牛来，醒一醒！</div>
+    <div class="stats">
+      奔跑里程 <b id="over-dist">0</b> 米<br/>
+      草料 <b id="over-coins">0</b> 捆 · 得分 <b id="over-score">0</b>
+    </div>
+    <button class="btn" id="btn-restart">再 入 梦 境</button>
+  </div>
+</div>
+
+<div id="selftest"></div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
