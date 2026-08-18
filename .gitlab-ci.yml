@@ -5,6 +5,7 @@ pages:
   script:
     - mkdir -p public
     - cp -r index.html js vendor README.md public/
+    - if [ -d audio ]; then cp -r audio public/; fi
   artifacts:
     paths:
       - public

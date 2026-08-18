@@ -10,6 +10,20 @@ export const CONFIG = {
   maxSpeed: 27,
   accel: 0.14,
 
+  // 妈妈技能（牛来冲刺）
+  dash: {
+    time: 2.4,            // 持续秒数
+    speed: 38,            // 冲刺目标速度
+    accel: 1.4,           // 冲刺加速度
+    smashBonus: 100,      // 撞碎障碍加分
+  },
+  energy: {
+    max: 100,
+    start: 100,           // 开局满能量，第一次冲刺白送
+    hay: 12,              // 每捆草料
+    bell: 30,             // 铜铃
+  },
+
   // 物理参数
   gravity: 34,
   jumpVel: 12.8,

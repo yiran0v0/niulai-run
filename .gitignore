@@ -1,3 +1,6 @@
 .DS_Store
 shots/
 .firecrawl/
+
+# 录音原始素材（处理后进 audio/）
+audio_src/

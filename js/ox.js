@@ -162,6 +162,19 @@ export function createOx() {
         body.position.y = -0.28;
         head.position.y = 1.05;
         head.rotation.x = 0.4;
+      } else if (s === 'dash') {
+        // 妈妈冲刺：低头猛冲，四蹄狂摆，牛角朝前
+        const swing = Math.sin(phase * 1.35) * 1.0;
+        const swing2 = Math.sin(phase * 1.35 + Math.PI) * 1.0;
+        legs[0].rotation.x = swing;
+        legs[3].rotation.x = swing;
+        legs[1].rotation.x = swing2;
+        legs[2].rotation.x = swing2;
+        body.rotation.x = -0.2;
+        body.position.y = -0.06 + Math.abs(Math.sin(phase * 1.35)) * 0.08;
+        head.position.y = 1.28;
+        head.rotation.x = 0.32;
+        tail.rotation.x = 0.75;
       }
 
       if (s !== 'slide') {
@@ -184,6 +197,7 @@ export function createOx() {
       phase = 0;
       body.rotation.x = 0; body.position.y = 0; body.scale.y = 1;
       head.position.set(0, 1.42, -0.72); head.rotation.x = 0;
+      tail.rotation.x = 0.5;
       for (const l of legs) l.rotation.x = 0;
     },
   };

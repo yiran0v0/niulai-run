@@ -10,6 +10,7 @@ import { createPlayer, bindControls } from './player.js';
 import { createGame } from './game.js';
 import { sfx, initAudio } from './audio.js';
 import { createDust } from './particles.js';
+import { CONFIG } from './config.js';
 
 window.__gameErrors = [];
 window.addEventListener('error', (e) => {
@@ -41,9 +42,11 @@ const player = createPlayer(
   (it) => {
     game.state.coins += 1;
     items.stats.collected++;
-    if (it.type === 'bell') sfx.bell(); else sfx.collect();
+    if (it.type === 'bell') { sfx.bell(); sfx.bellVoice(); game.addEnergy(CONFIG.energy.bell); }
+    else { sfx.collect(); sfx.hayFunny(); game.addEnergy(CONFIG.energy.hay); }
   },
-  (it) => { if (game.isRunning()) game.gameover(player); }
+  (it) => { if (game.isRunning()) game.gameover(player); },
+  (it) => { if (game.isRunning()) game.smash(it); }
 );
 const game = createGame(world, ox, track, items, player);
 
@@ -64,11 +67,15 @@ function startGame() {
 }
 document.getElementById('btn-start').addEventListener('click', startGame);
 document.getElementById('btn-restart').addEventListener('click', startGame);
+const btnMama = document.getElementById('btn-mama');
+btnMama.addEventListener('click', () => { initAudio(); if (game.isRunning()) game.tryMama(); });
+btnMama.addEventListener('touchstart', (e) => { e.preventDefault(); initAudio(); if (game.isRunning()) game.tryMama(); }, { passive: false });
 bindControls({
   left: () => game.isRunning() && player.moveLane(-1),
   right: () => game.isRunning() && player.moveLane(1),
   jump: () => { if (game.isRunning()) { initAudio(); player.jump(); sfx.jump(); } },
   slide: () => { if (game.isRunning()) { initAudio(); player.slide(); sfx.slide(); } },
+  mama: () => { initAudio(); if (game.isRunning()) game.tryMama(); },
 });
 
 addEventListener('resize', () => {
@@ -140,6 +147,15 @@ if (isTest) {
       game.update(1 / 60, 2, player);
       out.collectOk = game.state.coins === 1 && items.active.length === 0;
 
+      // ---- 妈妈技能单元测试：攒能量 → 触发冲刺 → 撞碎障碍不死亡 ----
+      game.start(player);
+      game.addEnergy(100);
+      out.mamaTrigger = game.tryMama() === true && game.state.dash > 0;
+      items.active.length = 0;
+      items.active.push({ type: 'stump', node: { position: { y: 0 }, rotation: { y: 0 } }, x: 0, z: 0, w: 1.2, h: 0.9, d: 1.2, ground: true, deadly: true });
+      game.update(1 / 60, 3, player);
+      out.mamaSmash = game.state.state === 'RUNNING' && items.active.length === 0 && game.state.bonus >= CONFIG.dash.smashBonus;
+
       // ---- 重开 ----
       game.start(player);
       out.restartOk = game.state.state === 'RUNNING' && game.state.dist < 1;
@@ -149,7 +165,7 @@ if (isTest) {
 
     out.pass = out.errors.length === 0 && out.frames > 3 && out.drawCalls > 0
       && out.sim && out.sim.dist > 60 && out.sim.jumped && out.sim.slid
-      && out.collisionHit && out.collectOk && out.restartOk && !out.simError;
+      && out.collisionHit && out.collectOk && out.mamaTrigger && out.mamaSmash && out.restartOk && !out.simError;
     document.getElementById('selftest').textContent = 'SELFTEST:' + JSON.stringify(out);
     console.log('SELFTEST ' + JSON.stringify(out));
   }, 900);

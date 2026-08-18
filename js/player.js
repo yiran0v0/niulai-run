@@ -1,7 +1,7 @@
 // player.js —— 牛来的操控与物理：三车道换位 / 跳跃 / 滑铲 / 碰撞检测
 import { CONFIG } from './config.js';
 
-export function createPlayer(items, onCollect, onHit) {
+export function createPlayer(items, onCollect, onHit, onSmash) {
   const P = {
     lane: 1,
     x: 0,
@@ -10,6 +10,7 @@ export function createPlayer(items, onCollect, onHit) {
     onGround: true,
     sliding: 0,       // 滑铲剩余秒数
     alive: true,
+    invincible: false, // 妈妈冲刺：撞碎而非撞死
   };
 
   function playerBox() {
@@ -40,7 +41,8 @@ export function createPlayer(items, onCollect, onHit) {
       if (!P.onGround) { P.vy = -CONFIG.jumpVel * 1.2; } // 空中下压快速落地
       P.sliding = CONFIG.slideTime;
     },
-    update(dt, speed) {
+    update(dt, speed, invincible) {
+      P.invincible = !!invincible;
       // 换道插值
       const targetX = CONFIG.lanes[P.lane];
       P.x += (targetX - P.x) * Math.min(1, dt * 11);
@@ -74,6 +76,12 @@ export function createPlayer(items, onCollect, onHit) {
         const yMin = it.ground ? 0 : it.lowY;
         const yMax = it.ground ? it.h : it.lowY + it.h;
         if (pb.yMin < yMax && pb.yMax > yMin) {
+          if (P.invincible) {
+            // 妈妈冲刺：撞碎障碍
+            items.removeAt(i);
+            if (onSmash) onSmash(it);
+            continue;
+          }
           onHit(it);
           return;
         }
@@ -82,11 +90,12 @@ export function createPlayer(items, onCollect, onHit) {
     pose() {
       if (!P.onGround) return 'jump';
       if (P.sliding > 0) return 'slide';
+      if (P.invincible) return 'dash';
       return 'run';
     },
     reset() {
       P.lane = 1; P.x = 0; P.jumpY = 0; P.vy = 0;
-      P.onGround = true; P.sliding = 0; P.alive = true;
+      P.onGround = true; P.sliding = 0; P.alive = true; P.invincible = false;
     },
   };
 }
@@ -103,6 +112,7 @@ export function bindControls(handlers) {
       case 'ArrowRight': case 'KeyD': fire(handlers.right)(e); break;
       case 'ArrowUp': case 'KeyW': case 'Space': fire(handlers.jump)(e); break;
       case 'ArrowDown': case 'KeyS': fire(handlers.slide)(e); break;
+      case 'KeyM': case 'ShiftLeft': case 'ShiftRight': fire(handlers.mama)(e); break;
     }
   });
   let tx = 0, ty = 0, tT = 0;

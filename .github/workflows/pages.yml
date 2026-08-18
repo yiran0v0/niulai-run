@@ -26,6 +26,7 @@ jobs:
         run: |
           mkdir -p public
           cp -r index.html js vendor README.md public/
+          [ -d audio ] && cp -r audio public/ || true
       - uses: actions/configure-pages@v5
         with:
           enablement: true

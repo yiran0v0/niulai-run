@@ -46,6 +46,28 @@
   #screen-over { display: none; }
   .quote { margin-top: 16px; font-size: 14px; color: var(--ink-soft); letter-spacing: 2px; }
 
+  /* ---------- 妈妈技能按钮（右下，游戏中显示） ---------- */
+  #btn-mama { position: fixed; right: 22px; bottom: 26px; z-index: 6; display: none;
+              flex-direction: column; align-items: center; justify-content: center;
+              width: 92px; height: 92px; border-radius: 50%;
+              background: var(--ink); color: var(--paper);
+              border: 3px solid var(--ink); cursor: pointer; user-select: none;
+              -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+              box-shadow: 4px 4px 0 rgba(51,53,46,.3); font-family: inherit; }
+  #btn-mama .mama-word { font-size: 26px; letter-spacing: 3px; line-height: 1; }
+  #btn-mama .mama-key { font-size: 11px; letter-spacing: 1px; opacity: .7; margin-top: 5px; }
+  #btn-mama .mama-fill { position: absolute; left: 0; right: 0; bottom: 0; height: 0%;
+                         background: var(--seal); opacity: .85; border-radius: 0 0 50% 50% / 0 0 12px 12px;
+                         transition: height .15s; pointer-events: none; }
+  #btn-mama .mama-fill, #btn-mama .mama-word, #btn-mama .mama-key { z-index: 1; }
+  #btn-mama.ready { border-color: var(--seal); box-shadow: 0 0 0 5px rgba(181,69,60,.25), 4px 4px 0 rgba(51,53,46,.3);
+                    animation: mamaPulse 1s infinite; }
+  #btn-mama.ready .mama-fill { height: 100%; background: var(--seal); }
+  #btn-mama.active { background: var(--seal); border-color: var(--paper); transform: scale(1.12); }
+  #btn-mama:active { transform: scale(.95); }
+  @keyframes mamaPulse { 0%,100% { box-shadow: 0 0 0 5px rgba(181,69,60,.25), 4px 4px 0 rgba(51,53,46,.3); }
+                         50% { box-shadow: 0 0 0 10px rgba(181,69,60,.12), 4px 4px 0 rgba(51,53,46,.3); } }
+
   /* ---------- 自检输出（不可见，供 headless dump-dom） ---------- */
   #selftest { position: fixed; left: 4px; bottom: 4px; z-index: 99; font: 12px monospace;
               color: transparent; max-width: 1px; overflow: hidden; }
@@ -60,6 +82,12 @@
   <div class="hud-card">草料 <b id="hud-coins">0</b></div>
 </div>
 
+<button id="btn-mama" title="妈妈技能（M / Shift）">
+  <div class="mama-fill" id="mama-fill"></div>
+  <span class="mama-word">妈妈</span>
+  <span class="mama-key">M / Shift</span>
+</button>
+
 <div class="screen" id="screen-start">
   <div class="panel">
     <div class="seal">纯手工·不用 AI</div>
@@ -68,7 +96,8 @@
     <div class="hint">
       怯懦的小牛犊「牛来」坠入梦境<br/>
       <b>← →</b> 换道　<b>↑ / 空格</b> 跳跃　<b>↓</b> 滑铲<br/>
-      躲开狼群与木桩，收集草料，跑出草原！
+      躲开狼群、豹拉与灵蛇，收集草料，跑出草原！<br/>
+      <b style="color:var(--seal)">吃草料攒能量 → 点「妈妈」/ 按 M：冲刺撞碎一切，双倍分！</b>
     </div>
     <button class="btn" id="btn-start">入 梦</button>
     <div class="quote">「世间从无安稳，要学会警觉自立。」—— 灵蛇</div>
@@ -83,6 +112,7 @@
       奔跑里程 <b id="over-dist">0</b> 米<br/>
       草料 <b id="over-coins">0</b> 捆 · 得分 <b id="over-score">0</b>
     </div>
+    <div class="quote">牛来：「妈妈——！」</div>
     <button class="btn" id="btn-restart">再 入 梦 境</button>
   </div>
 </div>
