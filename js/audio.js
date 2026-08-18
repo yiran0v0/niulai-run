@@ -32,7 +32,9 @@ export function preloadSamples() {
   loadSample('mamaDash', 'audio/take_08.m4a');   // 技能：短促“妈妈！”
   loadSample('mamaFunny', 'audio/take_09.m4a');  // 收集：短促怪叫
   loadSample('mamaBell', 'audio/take_03.m4a');   // 铜铃：短促喊声
-  loadSample('mamaCall', 'audio/take_01.m4a');   // 妈妈呼喊“牛来！”
+  loadSample('mamaCall', 'audio/gf_niulai.m4a'); // 死亡后妈妈呼喊“牛来！”（女朋友原创）
+  loadSample('calfCry', 'audio/gf_cry.m4a');     // 死亡后小牛哭声（女朋友原创）
+  loadSample('calfEnMama', 'audio/gf_en_mama.m4a'); // 死亡后小牛委屈“嗯，妈妈…”（女朋友原创）
   loadSample('jumpVoice', 'audio/gf_jump.m4a');  // 跳跃：短促“嗯！”（女朋友原创）
 }
 
@@ -107,6 +109,14 @@ export const sfx = {
   // 妈妈呼喊“牛来！”（死亡后应答；采样可选，回退短促双音）
   mamaCall: () => {
     if (!playSample('mamaCall', { gain: 0.9 })) { tone(520, 0.16, 'square', 0.09, 0, 700); tone(392, 0.2, 'square', 0.08, 0.14, 520); }
+  },
+  // 小牛哭声（采样可选，回退低吟）
+  calfCry: () => {
+    if (!playSample('calfCry', { gain: 0.85 })) { tone(240, 0.7, 'sawtooth', 0.1, 0, 140); tone(180, 0.9, 'triangle', 0.08, 0.5, 90); }
+  },
+  // 小牛委屈“嗯，妈妈…”（采样可选）
+  calfEnMama: () => {
+    playSample('calfEnMama', { gain: 0.85 });
   },
   // 收集草料：随机搞笑短音（采样可选，无则保持安静不吵）
   hayFunny: () => { playSample('mamaFunny', { gain: 0.5 }); },

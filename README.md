@@ -30,12 +30,15 @@
 
 | 文件 | 用途 |
 |---|---|
-| `audio/mama_v1.m4a` | 死亡：完整版撕心裂肺“妈妈——！” |
-| `audio/take_08.m4a` | 触发妈妈冲刺时喊“妈妈！” |
-| `audio/take_09.m4a` | 收集草料时随机搞笑短音 |
-| `audio/take_03.m4a` | 铜铃收集的短促喊声 |
+| `audio/gf_cry.m4a` | 死亡开场：小牛哭声 |
+| `audio/gf_niulai.m4a` | 死亡 1.8s 后：妈妈呼喊“牛来！” |
+| `audio/gf_en_mama.m4a` | 死亡 4.8s 后：小牛委屈“嗯，妈妈…” |
+| `audio/take_08.m4a` | 触发妈妈冲刺时喊“妈妈！”（待替换为 gf 版） |
+| `audio/take_09.m4a` | 收集草料时随机搞笑短音（待替换为 gf 版） |
+| `audio/take_03.m4a` | 铜铃收集的短促喊声（待替换为 gf 版） |
+| `audio/gf_jump.m4a` | 跳跃的短促“嗯！” |
 
-录音原始素材归档在 `audio_src/raw/`（11 段 take），替换配音只需改 `audio/` 对应文件。
+录音均为玩家原创录制（非电影原声），原始素材归档在 `audio_src/raw/`，替换配音只需改 `audio/` 对应文件。
 
 ## 运行
 

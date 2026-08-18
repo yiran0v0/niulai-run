@@ -99,11 +99,15 @@ export function createGame(world, ox, track, items) {
     g.dash = 0;
     g.shake = 0.6;
     sfx.crash();
-    sfx.mamaDie();
-    // 妈妈隔 1.5 秒回喊“牛来！”（若期间已重开则不再播）
+    sfx.calfCry();
+    // 死亡戏（全女朋友配音）：开场哭声 → 1.8s 妈妈喊“牛来！”→ 4.8s 委屈“嗯，妈妈…”
+    // （若中途已重开则不再播）
     setTimeout(() => {
       if (g.state === 'GAMEOVER') sfx.mamaCall();
-    }, 1500);
+    }, 1800);
+    setTimeout(() => {
+      if (g.state === 'GAMEOVER') sfx.calfEnMama();
+    }, 4800);
     $('over-dist').textContent = g.dist.toFixed(0);
     $('over-coins').textContent = g.coins;
     $('over-score').textContent = Math.floor(g.score + g.bonus);
