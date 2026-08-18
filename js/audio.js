@@ -32,6 +32,7 @@ export function preloadSamples() {
   loadSample('mamaDash', 'audio/take_08.m4a');   // 技能：短促“妈妈！”
   loadSample('mamaFunny', 'audio/take_09.m4a');  // 收集：短促怪叫
   loadSample('mamaBell', 'audio/take_03.m4a');   // 铜铃：短促喊声
+  loadSample('mamaCall', 'audio/take_01.m4a');   // 妈妈呼喊“牛来！”
 }
 
 const lastSampleAt = {};
@@ -101,6 +102,10 @@ export const sfx = {
   mamaDie: () => {
     if (!playSample('mamaDie', { gain: 1.0 })) fallbackMamaDie();
     if (Math.random() < 0.35) playSample('mamaFunny', { rate: 1.1, gain: 0.5, when: 0.55 });
+  },
+  // 妈妈呼喊“牛来！”（死亡后应答；采样可选，回退短促双音）
+  mamaCall: () => {
+    if (!playSample('mamaCall', { gain: 0.9 })) { tone(520, 0.16, 'square', 0.09, 0, 700); tone(392, 0.2, 'square', 0.08, 0.14, 520); }
   },
   // 收集草料：随机搞笑短音（采样可选，无则保持安静不吵）
   hayFunny: () => { playSample('mamaFunny', { gain: 0.5 }); },

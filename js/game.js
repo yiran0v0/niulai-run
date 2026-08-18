@@ -100,6 +100,10 @@ export function createGame(world, ox, track, items) {
     g.shake = 0.6;
     sfx.crash();
     sfx.mamaDie();
+    // 妈妈隔 1.5 秒回喊“牛来！”（若期间已重开则不再播）
+    setTimeout(() => {
+      if (g.state === 'GAMEOVER') sfx.mamaCall();
+    }, 1500);
     $('over-dist').textContent = g.dist.toFixed(0);
     $('over-coins').textContent = g.coins;
     $('over-score').textContent = Math.floor(g.score + g.bonus);
