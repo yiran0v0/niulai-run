@@ -76,7 +76,7 @@ btnMama.addEventListener('touchstart', (e) => { e.preventDefault(); initAudio();
 bindControls({
   left: () => game.isRunning() && player.moveLane(-1),
   right: () => game.isRunning() && player.moveLane(1),
-  jump: () => { if (game.isRunning()) { initAudio(); player.jump(); sfx.jump(); } },
+  jump: () => { if (game.isRunning()) { initAudio(); player.jump(); sfx.jump(); sfx.jumpVoice(); } },
   slide: () => { if (game.isRunning()) { initAudio(); player.slide(); sfx.slide(); } },
   mama: () => { initAudio(); if (game.isRunning()) game.tryMama(); },
 });

@@ -33,10 +33,11 @@ export function preloadSamples() {
   loadSample('mamaFunny', 'audio/take_09.m4a');  // 收集：短促怪叫
   loadSample('mamaBell', 'audio/take_03.m4a');   // 铜铃：短促喊声
   loadSample('mamaCall', 'audio/take_01.m4a');   // 妈妈呼喊“牛来！”
+  loadSample('jumpVoice', 'audio/gf_jump.m4a');  // 跳跃：短促“嗯！”（女朋友原创）
 }
 
 const lastSampleAt = {};
-const SAMPLE_MIN_GAP = { mamaFunny: 0.4, mamaBell: 0.35 };
+const SAMPLE_MIN_GAP = { mamaFunny: 0.4, mamaBell: 0.35, jumpVoice: 0.3 };
 
 function playSample(name, { rate = 1, gain = 0.9, when = 0 } = {}) {
   const buf = samples[name];
@@ -111,6 +112,8 @@ export const sfx = {
   hayFunny: () => { playSample('mamaFunny', { gain: 0.5 }); },
   // 收集铜铃：短促喊声（采样可选）
   bellVoice: () => { playSample('mamaBell', { gain: 0.65 }); },
+  // 跳跃：短促“嗯！”（采样可选；连跳防爆音节流）
+  jumpVoice: () => { playSample('jumpVoice', { gain: 0.55 }); },
   // 撞碎障碍的闷响
   smash: () => { tone(200, 0.16, 'square', 0.12, 0, 70); tone(90, 0.2, 'sawtooth', 0.09, 0.02, 45); },
   // 能量攒满的“叮”
