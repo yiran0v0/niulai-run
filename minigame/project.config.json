@@ -1,0 +1,24 @@
+{
+  "description": "牛来·梦境狂奔 微信小游戏体验版",
+  "packOptions": {
+    "ignore": [
+      { "type": "folder", "value": "build_src" },
+      { "type": "folder", "value": "js" },
+      { "type": "folder", "value": "vendor" },
+      { "type": "file", "value": "build.js" },
+      { "type": "file", "value": "game.template.js" },
+      { "type": "file", "value": "smoketest.html" }
+    ]
+  },
+  "setting": {
+    "es6": true,
+    "postcss": false,
+    "minified": true,
+    "urlCheck": false
+  },
+  "compileType": "game",
+  "libVersion": "latest",
+  "appid": "touristappid",
+  "projectname": "niulai-run",
+  "condition": {}
+}

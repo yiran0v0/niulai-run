@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>minigame smoke test(H5 模拟 wx 环境)</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #888; overflow: hidden; }
+  #canvas-slot { position: fixed; inset: 0; }
+  #canvas-slot canvas { width: 100%; height: 100%; display: block; }
+  #result { position: fixed; left: 4px; top: 4px; z-index: 99; font: 12px monospace;
+            color: #fff; max-width: 96vw; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<div id="canvas-slot"></div>
+<div id="result">running...</div>
+<script>
+// ---------- wx shim(把小游戏 API 映射到浏览器) ----------
+(function () {
+  const created = [];
+  wx = {
+    _touchHandlers: { start: [], end: [], move: [] },
+    createCanvas() {
+      let c;
+      if (created.length === 0) { c = document.createElement('canvas'); document.getElementById('canvas-slot').appendChild(c); }
+      else {
+        c = document.createElement('canvas'); // 离屏
+        // 调试:记录该 canvas 的 getContext 调用
+        const rawGet = c.getContext.bind(c);
+        c.getContext = (type, attrs) => { const r = rawGet(type, attrs); console.log('[shim] canvas#' + created.length + ' getContext(' + type + ') -> ' + (r ? 'ctx' : 'null')); return r; };
+      }
+      created.push(c);
+      return c;
+    },
+    createImage() { return document.createElement('img'); },
+    getSystemInfoSync() { return { screenWidth: innerWidth, screenHeight: innerHeight, pixelRatio: Math.min(devicePixelRatio || 1, 2) }; },
+    onTouchStart(fn) { this._touchHandlers.start.push(fn); },
+    onTouchEnd(fn) { this._touchHandlers.end.push(fn); },
+    onTouchMove(fn) { this._touchHandlers.move.push(fn); },
+    getFileSystemManager() {
+      return {
+        readFile({ filePath, success, fail }) {
+          fetch(filePath.replace(/^\//, '')).then(async (r) => {
+            if (!r.ok) return fail(new Error('404'));
+            success({ data: await r.arrayBuffer() });
+          }).catch(fail);
+        },
+      };
+    },
+    createWebAudioContext() { return new (window.AudioContext || window.webkitAudioContext)(); },
+    onShow() {}, onHide() {}, onError(fn) { addEventListener('error', fn); },
+  };
+  // 触摸桥:真实触摸 → wx handlers
+  function toWxTouch(e) {
+    return { touches: [...e.touches].map(t => ({ x: t.clientX, y: t.clientY, identifier: t.identifier })),
+             changedTouches: [...e.changedTouches].map(t => ({ x: t.clientX, y: t.clientY, identifier: t.identifier })) };
+  }
+  addEventListener('touchstart', (e) => wx._touchHandlers.start.forEach(f => f(toWxTouch(e))), { passive: true });
+  addEventListener('touchend', (e) => wx._touchHandlers.end.forEach(f => f(toWxTouch(e))), { passive: true });
+  // 鼠标转触点(桌面测试用)
+  let mDown = false, mXY = null;
+  addEventListener('mousedown', (e) => { mDown = true; mXY = { x: e.clientX, y: e.clientY }; const t = { touches: [{ x: e.clientX, y: e.clientY, identifier: 1 }], changedTouches: [{ x: e.clientX, y: e.clientY, identifier: 1 }] }; wx._touchHandlers.start.forEach(f => f(t)); });
+  addEventListener('mouseup', (e) => { const t = { touches: [], changedTouches: [{ x: e.clientX, y: e.clientY, identifier: 1 }] }; wx._touchHandlers.end.forEach(f => f(t)); mDown = false; });
+
+  window.__mgErrors = [];
+  addEventListener('error', (e) => __mgErrors.push(String(e.message || e)));
+  addEventListener('unhandledrejection', (e) => __mgErrors.push('rejection: ' + String(e.reason && e.reason.message || e.reason)));
+
+  // 动态加载:adapter(fetch+Function 包装,模拟微信 require)→ game.js
+  fetch('adapter/weapp-adapter.js').then((r) => r.text()).then((code) => {
+    const mod = { exports: {} };
+    const fn = new Function('module', 'exports', 'require', code);
+    fn(mod, mod.exports, (id) => { throw new Error('adapter 不应 require 其他模块: ' + id); });
+    window.__adapter = mod.exports;
+    // 提供浏览器版 require(game.js 顶部会调用)
+    window.require = (id) => {
+      if (id.includes('weapp-adapter')) return window.__adapter;
+      throw new Error('unexpected require: ' + id);
+    };
+    const s2 = document.createElement('script');
+    s2.src = 'game.js';
+    s2.onload = () => {
+      setTimeout(() => {
+        const out = { errors: __mgErrors, canvases: created.length };
+        try {
+          out.screenSize = [created[0].width, created[0].height];
+          out.glOnScreen = !!created[0].getContext('webgl2');
+          out.ui2d = created.length > 1 && !!(created[1].getContext('2d'));
+          document.getElementById('result').textContent = 'SMOKE:' + JSON.stringify(out);
+          console.log('SMOKE ' + JSON.stringify(out));
+        } catch (e) { document.getElementById('result').textContent = 'SMOKE-ERR:' + e.message; }
+      }, 1200);
+    };
+    s2.onerror = () => document.getElementById('result').textContent = 'FAIL: game.js load error(语法)';
+    document.body.appendChild(s2);
+  }).catch((e) => { document.getElementById('result').textContent = 'FAIL: adapter fetch ' + e; });
+})();
+</script>
+</body>
+</html>
