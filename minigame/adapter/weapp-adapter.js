@@ -6,6 +6,8 @@
 // ---------- 基础常量(部分小游戏环境未实现) ----------
 if (typeof GLOBAL === 'undefined') var GLOBAL = globalThis;
 if (typeof WINDOW === 'undefined') var WINDOW = globalThis;
+// 真正的全局对象:微信小游戏为 GameGlobal(真机/开发者工具),浏览器为 globalThis
+var _global = (typeof GameGlobal !== 'undefined') ? GameGlobal : globalThis;
 
 // 小游戏基础库提供:wx, setTimeout, setInterval, requestAnimationFrame, performance, console
 
@@ -94,8 +96,8 @@ const document = {
   },
   getElementById(id) { return elementRegistry[id] || null; },
   createElementNS(ns, tag) { return this.createElement(tag); },
-  addEventListener(type, fn) { globalThis.addEventListener(type, fn); },
-  removeEventListener(type, fn) { globalThis.removeEventListener(type, fn); },
+  addEventListener(type, fn) { _global.addEventListener(type, fn); },
+  removeEventListener(type, fn) { _global.removeEventListener(type, fn); },
   body: { appendChild() {}, removeChild() {}, style: {} },
   documentElement: { style: {} },
 };
@@ -127,8 +129,8 @@ function makeVirtualEl(id) {
   return el;
 }
 
-// ---------- window / globalThis 补齐 ----------
-const g = globalThis;
+// ---------- 全局对象补齐(微信真机/工具全局是 GameGlobal) ----------
+const g = _global;
 if (!g.addEventListener) {
   g._winTarget = new WeappEventTarget();
   g.addEventListener = (t, f) => g._winTarget.addEventListener(t, f);
@@ -146,11 +148,24 @@ if (!g.URLSearchParams) {
     get() { return null; }
   };
 }
-if (g.document === undefined) g.document = document;
-if (g.createElement === undefined) g.createElement = document.createElement;
-if (g.Image === undefined) g.Image = createImage;
-if (g.HTMLCanvasElement === undefined) g.HTMLCanvasElement = class HTMLCanvasElement {};
-if (g.window === undefined) g.window = g;
+// 强制覆盖:微信运行时的 document/window 可能是残缺桩,必须换成我们的完整 shim
+g.document = document;
+g.createElement = document.createElement;
+g.Image = createImage;
+g.HTMLCanvasElement = class HTMLCanvasElement {};
+g.window = g;
+// 双写保险:某些环境 globalThis 与 GameGlobal 不同
+try {
+  if (globalThis !== g) {
+    globalThis.document = document;
+    globalThis.window = g;
+    globalThis.Image = createImage;
+  }
+} catch (e) { /* 静默 */ }
+
+// 常用全局兜底:音频节流用 performance.now();three.js 偶查 navigator
+if (!g.performance) g.performance = { now: () => Date.now() };
+if (!g.navigator) g.navigator = { userAgent: '' };
 
 // ---------- touch 事件桥接:wx.onTouch* → 标准 touch 事件 ----------
 function wxTouchesToStd(evt) {
@@ -206,4 +221,5 @@ const exports_obj = {
   WeappEventTarget,
 };
 globalThis.__weapp = exports_obj;
+if (_global !== globalThis) { try { _global.__weapp = exports_obj; } catch (e) {} }
 module.exports = exports_obj;

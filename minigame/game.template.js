@@ -12,7 +12,7 @@ screenCanvas.height = sys.screenHeight * DPR;
 // [BUNDLE_HERE]
 
 // ---------- UI(离屏 2D) ----------
-const ui = createUI(sys.screenWidth, sys.screenHeight);
+const ui = createUI(sys.screenWidth, sys.screenHeight, DPR);
 
 // ---------- HUD 场景(CanvasTexture 叠加层) ----------
 const uiTex = new THREE.CanvasTexture(ui.canvas);

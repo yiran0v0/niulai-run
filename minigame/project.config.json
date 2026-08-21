@@ -1,24 +1,67 @@
 {
-  "description": "牛来·梦境狂奔 微信小游戏体验版",
+  "description": "梦境狂奔 微信小游戏体验版",
   "packOptions": {
     "ignore": [
-      { "type": "folder", "value": "build_src" },
-      { "type": "folder", "value": "js" },
-      { "type": "folder", "value": "vendor" },
-      { "type": "file", "value": "build.js" },
-      { "type": "file", "value": "game.template.js" },
-      { "type": "file", "value": "smoketest.html" }
-    ]
+      {
+        "value": "build_src",
+        "type": "folder"
+      },
+      {
+        "value": "js",
+        "type": "folder"
+      },
+      {
+        "value": "vendor",
+        "type": "folder"
+      },
+      {
+        "value": "tests",
+        "type": "folder"
+      },
+      {
+        "value": "build.js",
+        "type": "file"
+      },
+      {
+        "value": "game.template.js",
+        "type": "file"
+      },
+      {
+        "value": "smoketest.html",
+        "type": "file"
+      }
+    ],
+    "include": []
   },
   "setting": {
     "es6": true,
     "postcss": false,
     "minified": true,
-    "urlCheck": false
+    "urlCheck": false,
+    "compileWorklet": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "enhance": false,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "useCompilerPlugins": false,
+    "condition": false,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
   },
   "compileType": "game",
   "libVersion": "latest",
-  "appid": "touristappid",
+  "appid": "wx2eb0b51f4a213de8",
   "projectname": "niulai-run",
-  "condition": {}
+  "condition": {},
+  "simulatorPluginLibVersion": {},
+  "isGameTourist": false,
+  "editorSetting": {}
 }

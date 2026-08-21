@@ -54906,10 +54906,17 @@ function font(sz, bold) {
   return (bold ? 'bold ' : '') + sz + 'px "Kaiti SC","STKaiti","KaiTi",serif';
 }
 
-function createUI(vw0, vh0) {
+function createUI(vw0, vh0, dpr) {
+  // UI 层分辨率:2D 文字/卡片无需设备全像素密度(3x 时代会白白上传 3 倍纹理)。
+  // 密度取 min(pixelRatio, 2),最长边再 cap 2048(与 three.js 对 canvas 纹理的尺寸阈值一致)。
+  // 画布 = 视口逻辑尺寸 × 该系数,比例与屏幕严格一致(旧实现固定 1024×2048,竖屏下既偏大又有浪费)。
+  const uiScale = Math.min(dpr || 2, 2);
+  const longEdge = Math.max(vw0, vh0) * uiScale;
+  const scale = longEdge > 2048 ? uiScale * (2048 / longEdge) : uiScale;
+
   const uiCanvas = globalThis.__weapp.createUICanvas();
-  uiCanvas.width = 1024;
-  uiCanvas.height = 2048;
+  uiCanvas.width = Math.round(vw0 * scale);
+  uiCanvas.height = Math.round(vh0 * scale);
   const ctx = uiCanvas.getContext('2d');
   // 将绘制坐标从逻辑屏映射到纹理:统一按目标尺寸缩放绘制
   let _vw = 0, _vh = 0, _scale = 1;
@@ -55127,9 +55134,11 @@ function createUI(vw0, vh0) {
     ctx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
     ctx.save();
     ctx.scale(_scale, _scale);
-    if (els['screen-start'].style.display !== 'none') drawStart();
-    else if (els['screen-over'].style.display !== 'none') drawOver();
+    if (els['screen-start'].style.display !== 'none') { drawStart(); hit.restartBtn = null; }
+    else if (els['screen-over'].style.display !== 'none') { drawOver(); hit.startBtn = null; }
     else {
+      // 运行中:清掉 start/over 屏遗留的命中区,避免点按"误触"已隐藏的按钮(重开/再入)
+      hit.startBtn = null; hit.restartBtn = null;
       if (els.hud.style.display !== 'none') drawHud();
       drawMamaBtn(t);
     }
@@ -55286,7 +55295,7 @@ var CONFIG = __req('js/config.js').CONFIG;
 var createUI = __req('js/ui.js').createUI;
 
 // ---------- UI(离屏 2D) ----------
-const ui = createUI(sys.screenWidth, sys.screenHeight);
+const ui = createUI(sys.screenWidth, sys.screenHeight, DPR);
 
 // ---------- HUD 场景(CanvasTexture 叠加层) ----------
 const uiTex = new THREE.CanvasTexture(ui.canvas);

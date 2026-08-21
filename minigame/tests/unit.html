@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>牛来·梦境狂奔 微信小游戏 单元测试</title>
+<style>
+  html, body { margin: 0; background: #222; }
+  #canvas-slot { position: fixed; inset: 0; pointer-events: none; opacity: 0.3; }
+  #result { position: fixed; left: 8px; top: 8px; z-index: 99; font: 12px monospace;
+            color: #fff; max-width: 98vw; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<div id="canvas-slot"></div>
+<pre id="result">running...</pre>
+<script src="wx-shim.js"></script>
+<script src="boot.js"></script>
+<script src="lib.js"></script>
+<script type="module" src="unit-main.mjs"></script>
+</body>
+</html>
