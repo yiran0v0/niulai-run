@@ -12,14 +12,20 @@ screenCanvas.height = sys.screenHeight * DPR;
 
 var __mods = {}, __cache = {};
 function __def(id, fn) { __mods[id] = fn; }
+// 模块注入 shadow 全局:document/window 一律来自 adapter shim,
+// 不再依赖运行时全局(基础库 3.x 的 window/document 是只读残缺桩,靠不住)。
+var __env = (typeof __weapp !== 'undefined' && __weapp) || null;
+var __doc = __env ? __env.document : (typeof document !== 'undefined' ? document : undefined);
+var __win = __env ? (__env.globalObj || __envWin()) : __envWin();
+function __envWin() { return (typeof window !== 'undefined' && window) || (typeof globalThis !== 'undefined' && globalThis); }
 function __req(id) {
   if (__cache[id]) return __cache[id].exports;
   var m = { exports: {} };
   __cache[id] = m;
-  __mods[id](m.exports, __req);
+  __mods[id](m.exports, __req, __doc, __win);
   return m.exports;
 }
-__def('vendor/three.module.js', function (exports, __req) {
+__def('vendor/three.module.js', function (exports, __req, document, window) {
 /**
  * @license
  * Copyright 2010-2023 Three.js Authors
@@ -53434,7 +53440,7 @@ if ( typeof window !== 'undefined' ) {
 
 Object.assign(exports, { ACESFilmicToneMapping, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AgXToneMapping, AlphaFormat, AlwaysCompare, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AnimationAction, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AttachedBindMode, Audio, AudioAnalyser, AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BasicDepthPacking, BasicShadowMap, BatchedMesh, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, ByteType, Cache, Camera, CameraHelper, CanvasTexture, CapsuleGeometry, CatmullRomCurve3, CineonToneMapping, CircleGeometry, ClampToEdgeWrapping, Clock, Color, ColorKeyframeTrack, ColorManagement, CompressedArrayTexture, CompressedCubeTexture, CompressedTexture, CompressedTextureLoader, ConeGeometry, ConstantAlphaFactor, ConstantColorFactor, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderGeometry, Cylindrical, Data3DTexture, DataArrayTexture, DataTexture, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthStencilFormat, DepthTexture, DetachedBindMode, DirectionalLight, DirectionalLightHelper, DiscreteInterpolant, DisplayP3ColorSpace, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, EdgesGeometry, EllipseCurve, EqualCompare, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, ExtrudeGeometry, FileLoader, Float16BufferAttribute, Float32BufferAttribute, FloatType, Fog, FogExp2, FramebufferTexture, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, GreaterCompare, GreaterDepth, GreaterEqualCompare, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, HemisphereLight, HemisphereLightHelper, IcosahedronGeometry, ImageBitmapLoader, ImageLoader, ImageUtils, IncrementStencilOp, IncrementWrapStencilOp, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LatheGeometry, Layers, LessCompare, LessDepth, LessEqualCompare, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightProbe, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearDisplayP3ColorSpace, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace, LinearToneMapping, LinearTransfer, Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, MOUSE, Material, MaterialLoader, MathUtils, Matrix3, Matrix4, MaxEquation, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MultiplyBlending, MultiplyOperation, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeutralToneMapping, NeverCompare, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NotEqualCompare, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectSpaceNormalMap, OctahedronGeometry, OneFactor, OneMinusConstantAlphaFactor, OneMinusConstantColorFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrthographicCamera, P3Primaries, PCFShadowMap, PCFSoftShadowMap, PMREMGenerator, Path, PerspectiveCamera, Plane, PlaneGeometry, PlaneHelper, PointLight, PointLightHelper, Points, PointsMaterial, PolarGridHelper, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RED_GREEN_RGTC2_Format, RED_RGTC1_Format, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGB_BPTC_SIGNED_Format, RGB_BPTC_UNSIGNED_Format, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, Rec709Primaries, RectAreaLight, RedFormat, RedIntegerFormat, ReinhardToneMapping, RenderTarget, RepeatWrapping, ReplaceStencilOp, ReverseSubtractEquation, RingGeometry, SIGNED_RED_GREEN_RGTC2_Format, SIGNED_RED_RGTC1_Format, SRGBColorSpace, SRGBTransfer, Scene, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, Shape, ShapeGeometry, ShapePath, ShapeUtils, ShortType, Skeleton, SkeletonHelper, SkinnedMesh, Source, Sphere, SphereGeometry, Spherical, SphericalHarmonics3, SplineCurve, SpotLight, SpotLightHelper, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TetrahedronGeometry, Texture, TextureLoader, TorusGeometry, TorusKnotGeometry, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeGeometry, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, UniformsLib, UniformsUtils, UnsignedByteType, UnsignedInt248Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoTexture, WebGL1Renderer, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCoordinateSystem, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLRenderTarget, WebGLRenderer, WebGLUtils, WebGPUCoordinateSystem, WireframeGeometry, WrapAroundEnding, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, _SRGBAFormat, createCanvasElement });
 });
-__def('js/audio.js', function (exports, __req) {
+__def('js/audio.js', function (exports, __req, document, window) {
 // audio.js —— 极简 WebAudio 合成音效 + 真人语音采样
 // 新增：人声采样层 —— audio/ 目录下的录音（死亡长喊/技能短喊/搞笑短音）
 // 即可自动加载；缺失时静默回退到合成音，不影响游戏。
@@ -53569,7 +53575,7 @@ const sfx = {
 
 Object.assign(exports, { initAudio, preloadSamples, sfx });
 });
-__def('js/config.js', function (exports, __req) {
+__def('js/config.js', function (exports, __req, document, window) {
 // 《牛来·梦境狂奔》 全局配置 —— 素朴“手搓”调色板取自电影海报与正片观感
 const CONFIG = {
   // 车道
@@ -53646,7 +53652,7 @@ const CONFIG = {
 
 Object.assign(exports, { CONFIG });
 });
-__def('js/game.js', function (exports, __req) {
+__def('js/game.js', function (exports, __req, document, window) {
 // game.js —— 游戏状态机 / 计分 / HUD / 界面切换 / 镜头语言 / 粒子音效
 // READY → RUNNING → GAMEOVER；云雀「云玎」伴随飞行（致敬电影见证者）。
 // 妈妈技能：草料攒能量 → 点“妈妈”/按 M → 牛来冲刺（无敌撞碎、双倍分、喊“妈妈！”）。
@@ -53864,7 +53870,7 @@ function createGame(world, ox, track, items) {
 
 Object.assign(exports, { createGame });
 });
-__def('js/items.js', function (exports, __req) {
+__def('js/items.js', function (exports, __req, document, window) {
 // items.js —— 障碍物与收集物（对象池 + 模式化生成）
 // 障碍致敬电影意象：木桩、石块、栅栏（草原）、悬枝（森林）、狼群（反派）、
 // 豹拉（金色猎豹，会追着你换道）、灵蛇（贴地长蛇，需跳跃或换道）。
@@ -54264,7 +54270,7 @@ function createItems() {
 
 Object.assign(exports, { createItems });
 });
-__def('js/ox.js', function (exports, __req) {
+__def('js/ox.js', function (exports, __req, document, window) {
 // ox.js —— 主角「牛来」：怯懦的小牛犊
 // 程序化低多边形建模，致敬正片"以前用砖头搭建，现在用多边形搭建"的手搓质感。
 // 奶白身体 + 棕斑 + 呆萌大眼 + 小弯角；对角步态跑动、跳跃、滑铲姿态。
@@ -54472,7 +54478,7 @@ function createOx() {
 
 Object.assign(exports, { createOx });
 });
-__def('js/particles.js', function (exports, __req) {
+__def('js/particles.js', function (exports, __req, document, window) {
 // particles.js —— 扬尘粒子（奔跑时蹄下尘土，朴素小方片）
 const THREE = __req('vendor/three.module.js');
 
@@ -54530,7 +54536,7 @@ function createDust(scene) {
 
 Object.assign(exports, { createDust });
 });
-__def('js/player.js', function (exports, __req) {
+__def('js/player.js', function (exports, __req, document, window) {
 // player.js —— 牛来的操控与物理：三车道换位 / 跳跃 / 滑铲 / 碰撞检测
 const { CONFIG } = __req('js/config.js');
 
@@ -54682,7 +54688,7 @@ function bindControls(handlers) {
 
 Object.assign(exports, { createPlayer, bindControls });
 });
-__def('js/track.js', function (exports, __req) {
+__def('js/track.js', function (exports, __req, document, window) {
 // track.js —— 无尽赛道滚动带 + 路边景物（树/石/草丛/栅栏/图腾柱）
 // 牛来原地奔跑，世界向 +Z 滚动；段落完整越过后回收到最远端并重新布置。
 const THREE = __req('vendor/three.module.js');
@@ -54890,7 +54896,7 @@ function createTrack() {
 
 Object.assign(exports, { createTrack });
 });
-__def('js/ui.js', function (exports, __req) {
+__def('js/ui.js', function (exports, __req, document, window) {
 // ui.js —— 小游戏 canvas UI 层
 // H5 版用 DOM+CSS 渲染界面;小游戏无 DOM,本模块以 2D canvas 绘制同款界面,
 // 并以"虚拟元素"承接 game.js 的 DOM 读写(style.display/textContent/classList),
@@ -55159,7 +55165,7 @@ function createUI(vw0, vh0, dpr) {
 
 Object.assign(exports, { createUI });
 });
-__def('js/world.js', function (exports, __req) {
+__def('js/world.js', function (exports, __req, document, window) {
 // world.js —— 场景 / 相机 / 光照 / 水墨天空 / 远山 / 雾 / 草原
 // 视觉基调：电影唯一官方物料是“水墨海报”，正片是朴素低模三维——
 // 因此天空与远山走水墨晕染，地面物件走 flatShading 低多边形“手搓”感。

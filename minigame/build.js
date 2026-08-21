@@ -93,7 +93,7 @@ for (const f of files) {
   const src = fs.readFileSync(f, 'utf8');
   const { code, exports } = convert(rel, src);
   factories.push(
-    `__def('${id}', function (exports, __req) {\n${code}\nObject.assign(exports, { ${exports.join(', ')} });\n});`
+    `__def('${id}', function (exports, __req, document, window) {\n${code}\nObject.assign(exports, { ${exports.join(', ')} });\n});`
   );
 }
 
@@ -101,11 +101,17 @@ const template = fs.readFileSync(path.join(ROOT, 'game.template.js'), 'utf8');
 const inject = `
 var __mods = {}, __cache = {};
 function __def(id, fn) { __mods[id] = fn; }
+// 模块注入 shadow 全局:document/window 一律来自 adapter shim,
+// 不再依赖运行时全局(基础库 3.x 的 window/document 是只读残缺桩,靠不住)。
+var __env = (typeof __weapp !== 'undefined' && __weapp) || null;
+var __doc = __env ? __env.document : (typeof document !== 'undefined' ? document : undefined);
+var __win = __env ? (__env.globalObj || __envWin()) : __envWin();
+function __envWin() { return (typeof window !== 'undefined' && window) || (typeof globalThis !== 'undefined' && globalThis); }
 function __req(id) {
   if (__cache[id]) return __cache[id].exports;
   var m = { exports: {} };
   __cache[id] = m;
-  __mods[id](m.exports, __req);
+  __mods[id](m.exports, __req, __doc, __win);
   return m.exports;
 }
 ${factories.join('\n')}

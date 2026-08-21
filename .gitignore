@@ -4,3 +4,6 @@ shots/
 
 # 录音原始素材（处理后进 audio/）
 audio_src/
+
+# 小游戏测试产物
+minigame/tests/out/

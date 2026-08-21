@@ -167,6 +167,21 @@ forceSet(g, 'createElement', document.createElement);
 forceSet(g, 'Image', createImage);
 forceSet(g, 'HTMLCanvasElement', class HTMLCanvasElement {});
 forceSet(g, 'window', g);
+// 兜底:若 3.x 只读 getter 导致 document 引用替换失败,则把 shim 的方法
+// 逐个补写到运行时 document 对象上(对象自身属性通常仍可写),
+// 保证游戏代码 document.getElementById/createElement 始终可用。
+(function () {
+  const live = g.document;
+  if (live && live !== document) {
+    for (const k of Object.keys(document)) {
+      try {
+        if (live[k] === undefined) live[k] = document[k];
+      } catch (e) { /* 单个属性失败忽略 */ }
+    }
+    if (!live.getElementById) live.getElementById = document.getElementById;
+    if (!live.createElement) live.createElement = document.createElement;
+  }
+})();
 // 双写保险:某些环境 globalThis 与 GameGlobal 不同
 try {
   if (globalThis !== g) {
@@ -232,6 +247,7 @@ const exports_obj = {
   canvas, document, createCanvas, createUICanvas, createGLCanvas, createImage,
   registerElement, makeVirtualEl,
   WeappEventTarget,
+  globalObj: _global, // 打包器给模块注入 window shadow 用
 };
 globalThis.__weapp = exports_obj;
 if (_global !== globalThis) { try { _global.__weapp = exports_obj; } catch (e) {} }
