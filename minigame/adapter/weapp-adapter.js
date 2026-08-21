@@ -131,16 +131,29 @@ function makeVirtualEl(id) {
 
 // ---------- 全局对象补齐(微信真机/工具全局是 GameGlobal) ----------
 const g = _global;
+// 基础库 3.x 起 window/document 等属性是只读 getter,直接赋值会抛
+// "Cannot set property document of #<Window> which has only a getter"
+// 安全写入:先试普通赋值,失败再试 defineProperty,仍失败仅告警不中断。
+function forceSet(obj, key, value) {
+  if (obj[key] === value) return; // 已是目标值(runtime 内置实现已兼容)
+  try { obj[key] = value; } catch (e) { /* 严格模式下 getter-only 赋值会抛 */ }
+  if (obj[key] === value) return;
+  try {
+    Object.defineProperty(obj, key, { value, writable: true, configurable: true });
+  } catch (e2) {
+    console.warn('[adapter] 无法覆盖全局属性 ' + key + '，沿用运行时内置实现:', e2 && e2.message);
+  }
+}
 if (!g.addEventListener) {
   g._winTarget = new WeappEventTarget();
   g.addEventListener = (t, f) => g._winTarget.addEventListener(t, f);
   g.removeEventListener = (t, f) => g._winTarget.removeEventListener(t, f);
   g.dispatchEvent = (e) => g._winTarget.dispatchEvent(e);
 }
-if (!g.innerWidth) Object.defineProperty(g, 'innerWidth', { get() { return canvas.width; } });
-if (!g.innerHeight) Object.defineProperty(g, 'innerHeight', { get() { return canvas.height; } });
-if (!g.devicePixelRatio) g.devicePixelRatio = wx.getSystemInfoSync().pixelRatio || 2;
-if (!g.location) g.location = { search: '', href: '' };
+if (!g.innerWidth) Object.defineProperty(g, 'innerWidth', { get() { return canvas.width; }, configurable: true });
+if (!g.innerHeight) Object.defineProperty(g, 'innerHeight', { get() { return canvas.height; }, configurable: true });
+if (!g.devicePixelRatio) forceSet(g, 'devicePixelRatio', wx.getSystemInfoSync().pixelRatio || 2);
+if (!g.location) forceSet(g, 'location', { search: '', href: '' });
 if (!g.URLSearchParams) {
   g.URLSearchParams = class {
     constructor(q) { this._q = String(q || '').replace(/^\?/, ''); }
@@ -149,23 +162,23 @@ if (!g.URLSearchParams) {
   };
 }
 // 强制覆盖:微信运行时的 document/window 可能是残缺桩,必须换成我们的完整 shim
-g.document = document;
-g.createElement = document.createElement;
-g.Image = createImage;
-g.HTMLCanvasElement = class HTMLCanvasElement {};
-g.window = g;
+forceSet(g, 'document', document);
+forceSet(g, 'createElement', document.createElement);
+forceSet(g, 'Image', createImage);
+forceSet(g, 'HTMLCanvasElement', class HTMLCanvasElement {});
+forceSet(g, 'window', g);
 // 双写保险:某些环境 globalThis 与 GameGlobal 不同
 try {
   if (globalThis !== g) {
-    globalThis.document = document;
-    globalThis.window = g;
-    globalThis.Image = createImage;
+    forceSet(globalThis, 'document', document);
+    forceSet(globalThis, 'window', g);
+    forceSet(globalThis, 'Image', createImage);
   }
 } catch (e) { /* 静默 */ }
 
 // 常用全局兜底:音频节流用 performance.now();three.js 偶查 navigator
-if (!g.performance) g.performance = { now: () => Date.now() };
-if (!g.navigator) g.navigator = { userAgent: '' };
+if (!g.performance) forceSet(g, 'performance', { now: () => Date.now() });
+if (!g.navigator) forceSet(g, 'navigator', { userAgent: '' });
 
 // ---------- touch 事件桥接:wx.onTouch* → 标准 touch 事件 ----------
 function wxTouchesToStd(evt) {
