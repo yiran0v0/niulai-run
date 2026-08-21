@@ -146,9 +146,9 @@ function forceSet(obj, key, value) {
 }
 if (!g.addEventListener) {
   g._winTarget = new WeappEventTarget();
-  g.addEventListener = (t, f) => g._winTarget.addEventListener(t, f);
-  g.removeEventListener = (t, f) => g._winTarget.removeEventListener(t, f);
-  g.dispatchEvent = (e) => g._winTarget.dispatchEvent(e);
+  forceSet(g, 'addEventListener', (t, f) => g._winTarget.addEventListener(t, f));
+  forceSet(g, 'removeEventListener', (t, f) => g._winTarget.removeEventListener(t, f));
+  forceSet(g, 'dispatchEvent', (e) => g._winTarget.dispatchEvent(e));
 }
 if (!g.innerWidth) Object.defineProperty(g, 'innerWidth', { get() { return canvas.width; }, configurable: true });
 if (!g.innerHeight) Object.defineProperty(g, 'innerHeight', { get() { return canvas.height; }, configurable: true });
@@ -167,21 +167,9 @@ forceSet(g, 'createElement', document.createElement);
 forceSet(g, 'Image', createImage);
 forceSet(g, 'HTMLCanvasElement', class HTMLCanvasElement {});
 forceSet(g, 'window', g);
-// 兜底:若 3.x 只读 getter 导致 document 引用替换失败,则把 shim 的方法
-// 逐个补写到运行时 document 对象上(对象自身属性通常仍可写),
-// 保证游戏代码 document.getElementById/createElement 始终可用。
-(function () {
-  const live = g.document;
-  if (live && live !== document) {
-    for (const k of Object.keys(document)) {
-      try {
-        if (live[k] === undefined) live[k] = document[k];
-      } catch (e) { /* 单个属性失败忽略 */ }
-    }
-    if (!live.getElementById) live.getElementById = document.getElementById;
-    if (!live.createElement) live.createElement = document.createElement;
-  }
-})();
+// 注意:运行时桩对象可能整体只读/冻结,不再对其补写方法。
+// 游戏模块的 document/window 一律通过打包器 shadow 注入绑定本 shim(build.js),
+// 全局替换仅作为非 3.x 环境的兼容路径。
 // 双写保险:某些环境 globalThis 与 GameGlobal 不同
 try {
   if (globalThis !== g) {
@@ -203,20 +191,37 @@ function wxTouchesToStd(evt) {
     preventDefault() {}, stopPropagation() {},
   };
 }
-wx.onTouchStart((evt) => {
-  const e = { type: 'touchstart', ...wxTouchesToStd(evt), timeStamp: Date.now() };
-  canvas.dispatchEvent(e);
-  g.dispatchEvent({ ...e, target: canvas });
-});
-wx.onTouchEnd((evt) => {
-  const e = { type: 'touchend', ...wxTouchesToStd(evt), timeStamp: Date.now() };
-  canvas.dispatchEvent(e);
-  g.dispatchEvent({ ...e, target: canvas });
-});
-wx.onTouchMove((evt) => {
-  const e = { type: 'touchmove', ...wxTouchesToStd(evt), timeStamp: Date.now() };
-  canvas.dispatchEvent(e);
-});
+// 3.x 运行时可能带原生 DOM:派发原生事件对象才能被原生 listener 收到;
+// 无原生构造器(老基础库)时回退普通对象,由 adapter 自带事件目标分发。
+function makeTouchEvent(type, std) {
+  try {
+    if (typeof TouchEvent === 'function' && typeof Touch === 'function') {
+      const mk = (t) => new Touch({ identifier: t.identifier, target: canvas, clientX: t.clientX, clientY: t.clientY });
+      return new TouchEvent(type, {
+        touches: std.touches.map(mk),
+        changedTouches: std.changedTouches.map(mk),
+        bubbles: true, cancelable: true,
+      });
+    }
+  } catch (e) { /* 回退 */ }
+  try {
+    if (typeof Event === 'function') {
+      const ev = new Event(type, { bubbles: true, cancelable: true });
+      ev.touches = std.touches;
+      ev.changedTouches = std.changedTouches;
+      return ev;
+    }
+  } catch (e) { /* 回退 */ }
+  return { type, ...std, timeStamp: Date.now() };
+}
+function bridgeTouch(type, evt) {
+  const ev = makeTouchEvent(type, wxTouchesToStd(evt));
+  try { canvas.dispatchEvent(ev); } catch (e) { /* 原生拒绝普通对象等 */ }
+  try { g.dispatchEvent(Object.assign(ev, { target: canvas })); } catch (e) { /* 同上 */ }
+}
+wx.onTouchStart((evt) => bridgeTouch('touchstart', evt));
+wx.onTouchEnd((evt) => bridgeTouch('touchend', evt));
+wx.onTouchMove((evt) => bridgeTouch('touchmove', evt));
 
 // ---------- fetch shim(用于音频采样加载) ----------
 if (!g.fetch) {
