@@ -54,7 +54,8 @@ run_page() { # $1=名称 $2=路径 $3=虚拟时间预算(ms) $4=超时(实秒)
   echo "== 运行 $1 =="
   "$CHROME" --headless=new --no-first-run --no-default-browser-check \
     --user-data-dir=/tmp/chrome-niulai-tests --window-size=400,700 --hide-scrollbars \
-    --enable-unsafe-swiftshader --virtual-time-budget="$3" --timeout="$(( $4 * 1000 ))" \
+    --enable-unsafe-swiftshader --enable-logging=stderr --v=0 \
+    --virtual-time-budget="$3" --timeout="$(( $4 * 1000 ))" \
     --dump-dom "$URL$2" > "$OUT/$1.html" 2> "$OUT/$1.stderr" &
   local cpid=$!
   ( sleep "$4" && kill -9 $cpid 2>/dev/null ) 2>/dev/null & local wd=$!
@@ -85,6 +86,10 @@ fi
 if [ "$MODE" = "all" ] || [ "$MODE" = "integration" ]; then
   run_page integration "/minigame/tests/integration.html" 120000 60
   grep -q '"fail":0' "$OUT/integration.selftest" 2>/dev/null || FAILS=$((FAILS+1))
+fi
+if [ "$MODE" = "all" ] || [ "$MODE" = "compat3x" ]; then
+  run_page compat3x "/minigame/tests/compat3x.html" 30000 45
+  grep -q '"fail":0' "$OUT/compat3x.selftest" 2>/dev/null || FAILS=$((FAILS+1))
 fi
 
 kill $SRV 2>/dev/null

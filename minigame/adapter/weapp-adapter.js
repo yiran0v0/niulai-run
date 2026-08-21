@@ -150,16 +150,22 @@ if (!g.addEventListener) {
   forceSet(g, 'removeEventListener', (t, f) => g._winTarget.removeEventListener(t, f));
   forceSet(g, 'dispatchEvent', (e) => g._winTarget.dispatchEvent(e));
 }
-if (!g.innerWidth) Object.defineProperty(g, 'innerWidth', { get() { return canvas.width; }, configurable: true });
-if (!g.innerHeight) Object.defineProperty(g, 'innerHeight', { get() { return canvas.height; }, configurable: true });
+// 冻结全局(极端情况)下 defineProperty 也会抛 "not extensible";
+// 视口属性读不到时,让代码回落 __weapp shim/常量,不因安装崩溃。
+function safeDefine(obj, key, desc) {
+  try { Object.defineProperty(obj, key, desc); }
+  catch (e) { /* 冻结/不可扩展:静默,由 shadow 注入兜底 */ }
+}
+if (!g.innerWidth) safeDefine(g, 'innerWidth', { get() { return canvas.width; }, configurable: true });
+if (!g.innerHeight) safeDefine(g, 'innerHeight', { get() { return canvas.height; }, configurable: true });
 if (!g.devicePixelRatio) forceSet(g, 'devicePixelRatio', wx.getSystemInfoSync().pixelRatio || 2);
 if (!g.location) forceSet(g, 'location', { search: '', href: '' });
 if (!g.URLSearchParams) {
-  g.URLSearchParams = class {
+  forceSet(g, 'URLSearchParams', class {
     constructor(q) { this._q = String(q || '').replace(/^\?/, ''); }
     has() { return false; }
     get() { return null; }
-  };
+  });
 }
 // 强制覆盖:微信运行时的 document/window 可能是残缺桩,必须换成我们的完整 shim
 forceSet(g, 'document', document);
@@ -225,7 +231,7 @@ wx.onTouchMove((evt) => bridgeTouch('touchmove', evt));
 
 // ---------- fetch shim(用于音频采样加载) ----------
 if (!g.fetch) {
-  g.fetch = async (url) => {
+  forceSet(g, 'fetch', async (url) => {
     return new Promise((resolve, reject) => {
       const fs = wx.getFileSystemManager();
       fs.readFile({
@@ -238,22 +244,39 @@ if (!g.fetch) {
         fail: (err) => resolve({ ok: false, status: 404, arrayBuffer: () => Promise.reject(err) }),
       });
     });
-  };
+  });
 }
 
 // ---------- AudioContext shim ----------
 // 优先用 wx.createWebAudioContext(基础库 2.19+),接口与 W3C 基本一致
 if (!g.AudioContext && wx.createWebAudioContext) {
-  g.AudioContext = function AudioContext() { return wx.createWebAudioContext(); };
+  forceSet(g, 'AudioContext', function AudioContext() { return wx.createWebAudioContext(); });
 }
+
+// ---------- window 安全门面(供打包器 shadow 注入) ----------
+// 3.x 的 GameGlobal/window 可能只读/不可扩展:第三方库(如 three.js)会往 window 上
+// 挂属性(window.__THREE__=...),直接给它写会抛 "object is not extensible"。
+// 门面:读走真实全局,写落本地 backing,读优先 backing —— 让所有 window.X 读写都安全。
+const __windowBacking = { document, window: null };
+let windowFacade = _global;
+try {
+  if (typeof Proxy === 'function') {
+    windowFacade = new Proxy(_global, {
+      get(t, k) { return Object.prototype.hasOwnProperty.call(__windowBacking, k) ? __windowBacking[k] : t[k]; },
+      set(t, k, v) { __windowBacking[k] = v; return true; },
+      has(t, k) { return Object.prototype.hasOwnProperty.call(__windowBacking, k) || (k in t); },
+    });
+    __windowBacking.window = windowFacade;
+  }
+} catch (e) { windowFacade = _global; }
 
 // ---------- 导出给 game.js(CJS);同时挂 globalThis 供打包后的 ESM 模块访问 ----------
 const exports_obj = {
   canvas, document, createCanvas, createUICanvas, createGLCanvas, createImage,
   registerElement, makeVirtualEl,
   WeappEventTarget,
-  globalObj: _global, // 打包器给模块注入 window shadow 用
+  globalObj: windowFacade, // 打包器给模块注入 window shadow 用
 };
-globalThis.__weapp = exports_obj;
-if (_global !== globalThis) { try { _global.__weapp = exports_obj; } catch (e) {} }
+forceSet(globalThis, '__weapp', exports_obj);
+if (_global !== globalThis) { try { forceSet(_global, '__weapp', exports_obj); } catch (e) {} }
 module.exports = exports_obj;
