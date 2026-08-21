@@ -4,6 +4,22 @@
 const adapter = require('./adapter/weapp-adapter.js');
 const screenCanvas = adapter.canvas; // 上屏,WebGL
 
+// 尽早注册全局错误回调:真机启动失败不再"打不开/黑屏",而是弹窗给出原因。
+// wx.onError 捕获未捕获异常,wx.onUnhandledRejection 捕获未处理 Promise 拒绝。
+function __fatal(title, msg) {
+  try {
+    wx.showModal({
+      title: title,
+      content: String(msg).slice(0, 300),
+      showCancel: false,
+    });
+  } catch (e) { /* 弹窗失败则静默 */ }
+}
+try {
+  wx.onError((msg) => __fatal('运行错误', msg));
+  wx.onUnhandledRejection && wx.onUnhandledRejection((res) => __fatal('异步错误', (res && (res.reason || res.message)) || res));
+} catch (e) { /* 旧基础库无此 API 则忽略 */ }
+
 const sys = wx.getSystemInfoSync();
 const DPR = sys.pixelRatio || 2;
 screenCanvas.width = sys.screenWidth * DPR;
@@ -89,7 +105,6 @@ wx.onTouchEnd((e) => {
 // ---------- 生命周期 ----------
 wx.onShow(() => {});
 wx.onHide(() => {});
-wx.onError((msg) => console.error('[game error]', msg));
 
 // ---------- 主循环 ----------
 const clock = { last: Date.now() };
